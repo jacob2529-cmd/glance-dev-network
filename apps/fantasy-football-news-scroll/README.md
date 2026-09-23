@@ -91,30 +91,16 @@ six requests, or at most eight if player fallbacks are needed.
 
 Sleeper's full player catalog is about 14 MB, above GDN's 2 MB HTTP response
 limit. This app bundles a compact public snapshot of player ID, name, position
-and team (about 0.8 MB) for name matching. The local setup helper can regenerate
-a test copy using a fresh catalog; the committed snapshot needs seasonal
-maintenance or replacement with an approved compact endpoint. Matching uses
-normalized full names, so nicknames, renamed players and ambiguous names can
-be missed. RotoWire only supplies stories still in its current RSS response.
-To refresh the committed catalog, run `python3
-apps/fantasy-football-news-scroll/prepare_local.py --update-source-catalog`
-and review the resulting public-data diff before submitting it.
-
-For a prefilled local Studio preview, run:
-
-```sh
-python3 apps/fantasy-football-news-scroll/prepare_local.py --username YOUR_USERNAME --league-id YOUR_LEAGUE_ID --league-wire
-gdn studio apps/fantasy-football-news-scroll/.gdn/fantasy-football-news-scroll
-```
-
-The generated `.gdn/` copy is git-ignored and must not be submitted. It embeds
-a 24-hour player snapshot and prepopulates the Studio settings. The submitted
-source uses the GDN-supported `8x12` face so the app passes source validation.
+and team (about 0.8 MB) for name matching. The committed snapshot needs
+seasonal maintenance or replacement with an approved compact endpoint.
+Matching uses normalized full names, so nicknames, renamed players and
+ambiguous names can be missed. RotoWire only supplies stories still in its
+current RSS response. The submitted source uses the GDN-supported `8x12` face
+so the app passes source validation.
 
 Verify with:
 
 ```sh
-python3 apps/fantasy-football-news-scroll/test_sleeper.py
 gdn check apps/fantasy-football-news-scroll
 gdn validate apps/fantasy-football-news-scroll
 ```
