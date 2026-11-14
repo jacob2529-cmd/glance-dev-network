@@ -27,7 +27,7 @@ The app refreshes hourly. The approved feed has a 15-minute request cache; suppl
 
 ## Supplemental data
 
-- Overall team records: one shared current-season ESPN standings response, matched by exact team ID.
+- Overall team records: shared current-season ESPN standings, matched by exact team ID. If the U.S. response has no usable record, the app checks ESPN UK’s shared standings page with the same season and overall-record checks.
 - NET and Q1/Q2 records: NCAA NET table.
 - WAB: NCAA WAB table.
 - SOR: ESPN resume table.

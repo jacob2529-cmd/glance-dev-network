@@ -1916,12 +1916,13 @@ def resume_sor(html, team_id):
     return {}
 
 RESUME_RECORDS_URL = "https://www.espn.com/mens-college-basketball/standings/_/season/2027/group/50"
+RESUME_RECORDS_BACKUP_URL = "https://www.espn.co.uk/mens-college-basketball/standings/_/season/2027/group/50"
 
 def resume_record(body, team_id):
     # ESPN's compact HTML includes all 365 overall records in one response.
     # Its full standings API is >6 MB, above the host's 2 MB response limit.
     # Check the actual page season and column definition, not just the URL.
-    if team_id == "" or "Men's College Basketball Standings - 2026-27 NCAA Division I Standings" not in body:
+    if team_id == "" or not ("2026-27 NCAA Division I Standings" in body or "2026-27 NCAA Division I Tables" in body):
         return {}
     if '"season":"2027","group":"50","sport":"basketball","pageType":"standings"' not in body:
         return {}
@@ -1953,11 +1954,24 @@ def resume_record(body, team_id):
             if digit not in "0123456789": return {}
     return {"RECORD": record}
 
+def current_team_record(team_id):
+    if team_id == "":
+        return {}
+    # Both URLs cover the entire league. Use at most one additional shared
+    # fetch, not one request per team on multi-team projections.
+    for url in [RESUME_RECORDS_URL, RESUME_RECORDS_BACKUP_URL]:
+        response = http.get(url, headers = {"User-Agent": "Mozilla/5.0"}, ttl_seconds = 3600)
+        if response["status_code"] == 200:
+            record = resume_record(response.get("body", ""), team_id)
+            if record:
+                return record
+    return {}
+
 def your_team_resume(team, include_wab = False):
     # Full metrics are requested by the team snapshot and the single R64
     # opponent card, never for each possible future-round opponent.
     # Shared key-free ranking reads are cached for an hour.
-    metrics = {}
+    metrics = current_team_record(RESUME_TEAM_IDS.get(team, ""))
     seasons = []
     # Full-metric cards use one shared whole-table SOR read, not an AP read.
     if include_wab:
@@ -1989,13 +2003,6 @@ def your_team_resume(team, include_wab = False):
         else:
             metrics["AP"] = "--"
     metrics["_season"] = max(seasons) if len(seasons) > 0 else "--"
-    # Current-season record is separate from the dated NET/AP resume.
-    team_id = RESUME_TEAM_IDS.get(team, "")
-    if team_id != "":
-        # ESPN rejects the default Python HTTP user agent with HTTP 403.
-        record_response = http.get(RESUME_RECORDS_URL, headers = {"User-Agent": "Mozilla/5.0"}, ttl_seconds = 3600)
-        if record_response["status_code"] == 200:
-            metrics.update(resume_record(record_response.get("body", ""), team_id))
     if include_wab:
         wab = http.get(RESUME_WAB_URL, ttl_seconds = 3600)
         if wab["status_code"] == 200:
